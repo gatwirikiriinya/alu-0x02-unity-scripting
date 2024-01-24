@@ -1,40 +1,69 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
+    public float speed = 30f;
+    public int health = 5;
+    private Rigidbody rb;
 
-    public float speed = 5f;
     private int score = 0;
 
-    // Start is called before the first frame update
-    void Start()
+    private float horizontal;
+    private float vertical;
+
+    private void Start()
     {
-        
+        rb = GetComponent<Rigidbody>();
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
+    private void Update()
     {
-        float horizontalMovement = Input.GetAxis("Horizontal");
-        float verticalMovement = Input.GetAxis("Vertical");
-
-        Vector3 movement = new Vector3(horizontalMovement, 0f, verticalMovement);
-
-        GetComponent<Rigidbody>().MovePosition(transform.position + movement * speed * Time.fixedDeltaTime);
-    }
-
-    void onTriggerEnter(Collider other)
-    {
-        if(other.CompareTag("Pickup"))
+        if (Time.frameCount % 10 == 0)
         {
-            score ++;
-            UnityEngine.Debug.Log("Score: " + score);
+            if (health <= 0)
+            {
+                UnityEngine.Debug.Log("Game Over!");
+                health = 5;
+                score = 0;
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }
+        }
+    }
 
+    public void FixedUpdate()
+    {
+        PlayerMovements();
+    }
+
+
+    public void PlayerMovements()
+    {
+        horizontal = Input.GetAxisRaw("Horizontal");
+        vertical = Input.GetAxisRaw("Vertical");
+        rb.AddForce(new Vector3(horizontal, 0, vertical) * (speed * Time.deltaTime), ForceMode.Acceleration);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Pickup"))
+        {
+            score++;
+            UnityEngine.Debug.Log("score : " + score);
             Destroy(other.gameObject);
+        }
+
+        if (other.CompareTag("Trap"))
+        {
+            health--;
+            UnityEngine.Debug.Log("Health: " + health);
+        }
+
+        if (other.CompareTag("Goal"))
+        {
+            UnityEngine.Debug.Log("You win!");
         }
     }
 }
